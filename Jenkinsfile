@@ -2,34 +2,39 @@ pipeline {
     agent any
 
     environment {
-        EMAIL_RECIPIENTS = 'praveenpkitc@gmail.com'
+        DOCKER_IMAGE = "praveensise/trend-app"
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git url: 'https://github.com/praveenterzo/projects.git', branch: 'dev'
+                checkout scm
             }
         }
 
-        stage('Run Script') {
+        stage('Build Docker Image') {
             steps {
-                 sh 'chmod +x modify.sh'; 
-                 sh './modify.sh'
+                script {
+                    def tag = env.dev   // main or dev
+
+                    sh """
+                        docker build -t ${DOCKER_IMAGE}:${tag} .
+                    """
+                }
             }
         }
-    }
 
-    post {
-        success {
-            mail to: "${EMAIL_RECIPIENTS}",
-                 subject: "✅ Jenkins Build #${BUILD_NUMBER} - SUCCESS",
-                 body: "The build was successful.\n\nCheck it here: ${BUILD_URL}"
-        }
-        failure {
-            mail to: "${EMAIL_RECIPIENTS}",
-                 subject: "❌ Jenkins Build #${BUILD_NUMBER} - FAILED",
-                 body: "The build failed.\n\nCheck it here: ${BUILD_URL}"
+        stage('Push Image to Registry') {
+            steps {
+                script {
+                    withCredentials([string(credentialsId: 'dckr_pat_Ik7lIFR8j9l22Qx7aWXUDD2b0fM', variable: 'TOKEN')]) {
+                        sh """
+                            echo "$TOKEN" | docker login -u praveensise --password-stdin
+                            docker push ${DOCKER_IMAGE}:${env.BRANCH_NAME}
+                        """
+                    }
+                }
+            }
         }
     }
 }
