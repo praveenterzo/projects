@@ -27,7 +27,9 @@ pipeline {
         stage('Push Image to Registry') {
             steps {
                 script {
-                    withCredentials([string(credentialsId: 'dckr_pat_Ik7lIFR8j9l22Qx7aWXUDD2b0fM', variable: 'TOKEN')]) {
+                    withCredentials([usernamePassword(credentialsId: 'docker_cred',
+                                                     usernameVariable: 'USER',
+                                                     passwordVariable: 'PASS')]) {
                         sh """
                             echo "$TOKEN" | docker login -u praveensise --password-stdin
                             docker push ${DOCKER_IMAGE}:${env.BRANCH_NAME}
