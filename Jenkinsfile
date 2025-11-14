@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = "praveensise/trend-app"
+        DOCKER_IMAGE = "praveensise/prod"
     }
 
     stages {
@@ -15,7 +15,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    def tag = env.dev   // main or dev
+                    def tag = env.main   // main or dev
 
                     sh """
                         docker build -t ${DOCKER_IMAGE}:${tag} .
@@ -27,9 +27,13 @@ pipeline {
         stage('Push Image to Registry') {
             steps {
                 script {
-                    withCredentials([string(credentialsId: 'dckr_pat_Ik7lIFR8j9l22Qx7aWXUDD2b0fM', variable: 'TOKEN')]) {
+                    withCredentials([usernamePassword(
+                        credentialsId: 'docker_cred',
+                        usernameVariable: 'DOCKERHUB_USER',
+                        passwordVariable:  'DOCKERHUB_TOKEN'
+                    )]) {
                         sh """
-                            echo "$TOKEN" | docker login -u praveensise --password-stdin
+                          echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USER" --password-stdin
                             docker push ${DOCKER_IMAGE}:${env.BRANCH_NAME}
                         """
                     }
