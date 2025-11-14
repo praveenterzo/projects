@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = "praveensise/trend-app:latest"
+        DOCKER_IMAGE = "praveensise/trend-app"
     }
 
     stages {
